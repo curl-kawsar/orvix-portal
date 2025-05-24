@@ -309,9 +309,9 @@ export default function InvoicePage({ params }) {
               
               <div className="mt-6">
                 <h3 className="text-sm font-medium text-gray-500">FROM</h3>
-                <p className="text-gray-900 font-medium">Your Company Name</p>
-                <p className="text-gray-600">Your Company Address</p>
-                <p className="text-gray-600">contact@yourcompany.com</p>
+                <p className="text-gray-900 font-medium">Orvix 360</p>
+                <p className="text-gray-600">King Sreepur, Chauddagram, Cumilla</p>
+                <p className="text-gray-600">info@orvix360.com</p>
               </div>
               
               <div className="mt-6">

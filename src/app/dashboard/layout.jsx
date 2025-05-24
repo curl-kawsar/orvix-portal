@@ -3,7 +3,7 @@ import Sidebar from "@/components/dashboard/Sidebar";
 import TopNavbar from "@/components/dashboard/TopNavbar";
 import { cookies } from "next/headers";
 import { verifyJWT } from "@/lib/auth";
-
+import { AuthProvider } from "@/contexts/AuthContext";
 export default async function DashboardLayout({ children }) {
   const cookieStore = cookies();
   const token = cookieStore.get("token")?.value;
@@ -20,6 +20,7 @@ export default async function DashboardLayout({ children }) {
   }
 
   return (
+    <AuthProvider>
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -31,5 +32,6 @@ export default async function DashboardLayout({ children }) {
         </main>
       </div>
     </div>
+    </AuthProvider>
   );
 } 

@@ -15,6 +15,7 @@ import {
   LogOut
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Navigation items based on user roles
 const navigationItems = {
@@ -81,11 +82,16 @@ const navigationItems = {
 
 export default function Sidebar() {
   const pathname = usePathname();
-  // This would come from authentication context in a real app
-  // For now, defaulting to admin for demonstration
-  const userRole = "admin";
+  const { user, logout } = useAuth();
+  
+  // Use user role from auth context, default to developer if not available
+  const userRole = user?.role || "developer";
   
   const navItems = navigationItems[userRole] || navigationItems.developer;
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <div className="hidden md:flex md:flex-col md:fixed md:inset-y-0 z-20">
@@ -139,15 +145,15 @@ export default function Sidebar() {
               <UserCircle size={22} />
             </div>
             <div className="ml-3 overflow-hidden">
-              <p className="text-sm font-medium text-gray-800 truncate">Admin User</p>
-              <p className="text-xs text-gray-500 truncate">admin@example.com</p>
+              <p className="text-sm font-medium text-gray-800 truncate">{user?.name || "User"}</p>
+              <p className="text-xs text-gray-500 truncate">{user?.email || "user@example.com"}</p>
             </div>
-            <Link 
-              href="/logout" 
+            <button 
+              onClick={handleLogout} 
               className="ml-auto p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors"
             >
               <LogOut size={18} />
-            </Link>
+            </button>
           </div>
         </div>
       </div>

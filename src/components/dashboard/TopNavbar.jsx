@@ -19,6 +19,7 @@ import {
   FileText,
   ArrowRight
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock data for search suggestions
 const searchSuggestions = [
@@ -68,6 +69,7 @@ const searchSuggestions = [
 
 export default function TopNavbar() {
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -202,6 +204,10 @@ export default function TopNavbar() {
     router.push(url);
     setShowSuggestions(false);
     setSearchTerm("");
+  };
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (
@@ -429,7 +435,7 @@ export default function TopNavbar() {
                   <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white">
                     <UserCircle className="h-5 w-5" />
                   </div>
-                  <span className="hidden md:flex ml-2 text-sm font-medium text-gray-700">Admin User</span>
+                  <span className="hidden md:flex ml-2 text-sm font-medium text-gray-700">{user?.name || "User"}</span>
                   <ChevronDown className="hidden md:flex ml-1 h-4 w-4 text-gray-400" />
                 </div>
               </button>
@@ -462,15 +468,17 @@ export default function TopNavbar() {
                       <Settings className="mr-3 h-4 w-4 text-gray-500" />
                       Settings
                     </Link>
-                    <Link
-                      href="/logout"
-                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition duration-150 flex items-center"
+                    <button
+                      onClick={() => {
+                        setIsProfileDropdownOpen(false);
+                        handleLogout();
+                      }}
+                      className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition duration-150 flex items-center"
                       role="menuitem"
-                      onClick={() => setIsProfileDropdownOpen(false)}
                     >
                       <LogOut className="mr-3 h-4 w-4 text-gray-500" />
                       Sign out
-                    </Link>
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -594,8 +602,8 @@ export default function TopNavbar() {
                   </div>
                 </div>
                 <div className="ml-3">
-                  <div className="text-base font-medium text-gray-800">Admin User</div>
-                  <div className="text-sm font-medium text-gray-500">admin@example.com</div>
+                  <div className="text-base font-medium text-gray-800">{user?.name || "User"}</div>
+                  <div className="text-sm font-medium text-gray-500">{user?.email || "user@example.com"}</div>
                 </div>
               </div>
               <div className="mt-3 px-2 space-y-1">
@@ -611,12 +619,12 @@ export default function TopNavbar() {
                 >
                   Settings
                 </Link>
-                <Link
-                  href="/logout"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-red-700 hover:bg-red-50 transition duration-150"
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-red-700 hover:bg-red-50 transition duration-150"
                 >
                   Sign out
-                </Link>
+                </button>
               </div>
             </div>
           </motion.div>
