@@ -15,26 +15,36 @@ import {
   ChevronDown,
   ChevronUp,
   MoreHorizontal,
-  Loader2
+  Loader2,
+  Eye,
+  Edit,
+  BarChart3,
+  CheckSquare,
+  Users,
+  Sliders,
+  Calendar,
+  RefreshCw,
+  ArrowUpRight,
+  ListFilter
 } from "lucide-react";
 import { toast } from "sonner";
 
-// Status badge component
+// Status badge component with enhanced design
 function StatusBadge({ status }) {
   const statusConfig = {
-    "planning": { color: "bg-blue-100 text-blue-800", icon: <Clock className="w-4 h-4 mr-1" /> },
-    "in-progress": { color: "bg-yellow-100 text-yellow-800", icon: <Briefcase className="w-4 h-4 mr-1" /> },
-    "review": { color: "bg-purple-100 text-purple-800", icon: <AlertCircle className="w-4 h-4 mr-1" /> },
-    "completed": { color: "bg-green-100 text-green-800", icon: <CheckCircle className="w-4 h-4 mr-1" /> },
-    "on-hold": { color: "bg-orange-100 text-orange-800", icon: <PauseCircle className="w-4 h-4 mr-1" /> },
-    "cancelled": { color: "bg-red-100 text-red-800", icon: <XCircle className="w-4 h-4 mr-1" /> },
+    "planning": { color: "bg-blue-100 text-blue-800 border-blue-200", icon: <Clock className="w-3.5 h-3.5 mr-1" /> },
+    "in-progress": { color: "bg-yellow-100 text-yellow-800 border-yellow-200", icon: <Briefcase className="w-3.5 h-3.5 mr-1" /> },
+    "review": { color: "bg-purple-100 text-purple-800 border-purple-200", icon: <AlertCircle className="w-3.5 h-3.5 mr-1" /> },
+    "completed": { color: "bg-green-100 text-green-800 border-green-200", icon: <CheckCircle className="w-3.5 h-3.5 mr-1" /> },
+    "on-hold": { color: "bg-orange-100 text-orange-800 border-orange-200", icon: <PauseCircle className="w-3.5 h-3.5 mr-1" /> },
+    "cancelled": { color: "bg-red-100 text-red-800 border-red-200", icon: <XCircle className="w-3.5 h-3.5 mr-1" /> },
   };
 
   const config = statusConfig[status] || statusConfig["planning"];
   const displayStatus = status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
 
   return (
-    <span className={`px-2 py-1 inline-flex items-center text-xs font-medium rounded-full ${config.color}`}>
+    <span className={`px-2.5 py-1 inline-flex items-center text-xs font-medium rounded-full border ${config.color}`}>
       {config.icon}
       {displayStatus}
     </span>
@@ -56,6 +66,31 @@ function formatDate(dateString) {
   return new Date(dateString).toLocaleDateString('en-US', options);
 }
 
+// Format date with deadline highlighting
+function formatDateWithHighlight(dateString) {
+  const date = new Date(dateString);
+  const today = new Date();
+  const diffDays = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+  
+  let textColor = "text-gray-700";
+  if (diffDays < 0) {
+    textColor = "text-red-600 font-medium";
+  } else if (diffDays <= 7) {
+    textColor = "text-amber-600";
+  }
+  
+  return (
+    <div className="flex flex-col">
+      <span className={`text-sm ${textColor}`}>{formatDate(dateString)}</span>
+      {diffDays < 0 ? (
+        <span className="text-xs text-red-500 mt-0.5">Overdue</span>
+      ) : diffDays <= 7 ? (
+        <span className="text-xs text-amber-500 mt-0.5">{diffDays} days left</span>
+      ) : null}
+    </div>
+  );
+}
+
 export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -64,6 +99,7 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -133,9 +169,36 @@ export default function ProjectsPage() {
     }
   };
 
+  // Calculate project statistics
+  const stats = {
+    total: projects.length,
+    active: projects.filter(p => p.status === 'in-progress').length,
+    planning: projects.filter(p => p.status === 'planning').length,
+    completed: projects.filter(p => p.status === 'completed').length,
+    review: projects.filter(p => p.status === 'review').length,
+    onHold: projects.filter(p => p.status === 'on-hold').length,
+    overdue: projects.filter(p => new Date(p.deadline) < new Date() && p.status !== 'completed').length
+  };
+
+  // Stat card component
+  const StatCard = ({ label, value, icon, color }) => (
+    <div className={`bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow`}>
+      <div className="p-4 flex items-center">
+        <div className={`p-2 rounded-lg ${color}`}>
+          {icon}
+        </div>
+        <div className="ml-3">
+          <p className="text-sm font-medium text-gray-500">{label}</p>
+          <p className="text-2xl font-semibold text-gray-900">{value}</p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Header with title and button */}
+      <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
           <p className="mt-1 text-sm text-gray-500">
@@ -151,66 +214,208 @@ export default function ProjectsPage() {
         </Link>
       </div>
 
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <StatCard 
+          label="Total Projects" 
+          value={stats.total} 
+          icon={<Briefcase className="h-5 w-5 text-blue-600" />}
+          color="bg-blue-50"
+        />
+        <StatCard 
+          label="Active Projects" 
+          value={stats.active} 
+          icon={<RefreshCw className="h-5 w-5 text-green-600" />}
+          color="bg-green-50"
+        />
+        <StatCard 
+          label="In Review" 
+          value={stats.review} 
+          icon={<AlertCircle className="h-5 w-5 text-purple-600" />}
+          color="bg-purple-50"
+        />
+        <StatCard 
+          label="Overdue" 
+          value={stats.overdue} 
+          icon={<Clock className="h-5 w-5 text-red-600" />}
+          color="bg-red-50"
+        />
+      </div>
+
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
+      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-medium text-gray-900">Project List</h2>
+          <button 
+            onClick={() => setIsFilterExpanded(!isFilterExpanded)}
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            <ListFilter className="w-4 h-4 mr-2 text-gray-500" />
+            Filters
+            {isFilterExpanded ? 
+              <ChevronUp className="w-4 h-4 ml-1 text-gray-500" /> : 
+              <ChevronDown className="w-4 h-4 ml-1 text-gray-500" />
+            }
+          </button>
+        </div>
+
+        <div className={`transition-all duration-300 ease-in-out ${isFilterExpanded ? 'max-h-80 opacity-100 mb-4' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+            {/* Search */}
+            <div>
+              <label htmlFor="search" className="block text-xs font-medium text-gray-700 mb-1">Search Projects</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-gray-400" />
+                </div>
+                <input
+                  id="search"
+                  type="text"
+                  placeholder="Project name, client, etc."
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
-              <input
-                type="text"
-                placeholder="Search projects..."
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
             </div>
-          </div>
-          
-          {/* Status filter */}
-          <div className="w-full md:w-48">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Filter className="h-5 w-5 text-gray-400" />
+            
+            {/* Status filter */}
+            <div>
+              <label htmlFor="status" className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Filter className="h-4 w-4 text-gray-400" />
+                </div>
+                <select
+                  id="status"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="planning">Planning</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="review">Review</option>
+                  <option value="completed">Completed</option>
+                  <option value="on-hold">On Hold</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
               </div>
-              <select
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="">All Statuses</option>
-                <option value="planning">Planning</option>
-                <option value="in-progress">In Progress</option>
-                <option value="review">Review</option>
-                <option value="completed">Completed</option>
-                <option value="on-hold">On Hold</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
+            </div>
+            
+            {/* Sort by */}
+            <div>
+              <label htmlFor="sortBy" className="block text-xs font-medium text-gray-700 mb-1">Sort by</label>
+              <div className="flex space-x-2">
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Sliders className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <select
+                    id="sortBy"
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={sortField}
+                    onChange={(e) => setSortField(e.target.value)}
+                  >
+                    <option value="name">Name</option>
+                    <option value="client">Client</option>
+                    <option value="deadline">Deadline</option>
+                    <option value="completionPercentage">Progress</option>
+                    <option value="budget">Budget</option>
+                    <option value="status">Status</option>
+                  </select>
+                </div>
+                <button
+                  onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
+                  className="inline-flex items-center justify-center p-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50"
+                >
+                  {sortDirection === "asc" ? 
+                    <ChevronUp className="w-4 h-4" /> : 
+                    <ChevronDown className="w-4 h-4" />
+                  }
+                </button>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Search bar for collapsed state */}
+        {!isFilterExpanded && (
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search projects..."
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            {/* Status filter */}
+            <div className="w-full md:w-48">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Filter className="h-5 w-5 text-gray-400" />
+                </div>
+                <select
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="planning">Planning</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="review">Review</option>
+                  <option value="completed">Completed</option>
+                  <option value="on-hold">On Hold</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Loading state */}
       {isLoading && (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-          <span className="ml-2 text-gray-500">Loading projects...</span>
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="relative">
+            <div className="h-20 w-20 rounded-full border-t-4 border-b-4 border-blue-500 animate-spin"></div>
+            <div className="absolute top-0 left-0 h-20 w-20 flex items-center justify-center">
+              <Briefcase className="h-8 w-8 text-blue-500" />
+            </div>
+          </div>
+          <p className="mt-4 text-base font-medium text-gray-600">Loading projects...</p>
+          <p className="text-sm text-gray-500">Please wait while we fetch your project data</p>
         </div>
       )}
 
       {/* Error state */}
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4">
-          <div className="flex">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 my-4">
+          <div className="flex items-start">
             <div className="flex-shrink-0">
-              <AlertCircle className="h-5 w-5 text-red-400" />
+              <div className="p-2 bg-red-100 rounded-full">
+                <AlertCircle className="h-6 w-6 text-red-600" />
+              </div>
             </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="ml-4">
+              <h3 className="text-lg font-medium text-red-800">Error loading projects</h3>
+              <p className="mt-1 text-sm text-red-700">{error}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="mt-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry
+              </button>
             </div>
           </div>
         </div>
@@ -218,11 +423,11 @@ export default function ProjectsPage() {
 
       {/* Projects Table */}
       {!isLoading && !error && (
-        <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="bg-white overflow-hidden border border-gray-100 rounded-lg">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
+              <thead>
+                <tr className="bg-gray-50">
                   <th 
                     scope="col" 
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -332,8 +537,27 @@ export default function ProjectsPage() {
                 ))}
                 {filteredProjects.length === 0 && (
                   <tr>
-                    <td colSpan="8" className="px-6 py-4 text-center text-sm text-gray-500">
-                      No projects found matching your criteria
+                    <td colSpan="8" className="px-6 py-10 text-center">
+                      <div className="flex flex-col items-center">
+                        <div className="p-3 bg-gray-100 rounded-full">
+                          <Briefcase className="h-8 w-8 text-gray-400" />
+                        </div>
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">No projects found</h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                          No projects match your current filter criteria
+                        </p>
+                        {(searchQuery || statusFilter) && (
+                          <button
+                            onClick={() => {
+                              setSearchQuery('');
+                              setStatusFilter('');
+                            }}
+                            className="mt-3 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            Clear filters
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -403,73 +627,117 @@ function ProjectRow({ project, onProjectUpdate }) {
     }
   };
   
+  // Get deadline status
+  const getDeadlineStatus = () => {
+    const today = new Date();
+    const deadline = new Date(project.deadline);
+    const diffDays = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0 && project.status !== 'completed') {
+      return {
+        label: 'Overdue',
+        class: 'text-red-600'
+      };
+    } else if (diffDays <= 7 && project.status !== 'completed') {
+      return {
+        label: `${diffDays} day${diffDays === 1 ? '' : 's'} left`,
+        class: 'text-amber-600'
+      };
+    }
+    return null;
+  };
+  
+  const deadlineStatus = getDeadlineStatus();
+  
   return (
-    <tr key={project.id} className="hover:bg-gray-50">
+    <tr className="hover:bg-gray-50 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm font-medium text-blue-600">
-          <Link href={`/dashboard/projects/${project.id}`}>
+        <div className="flex flex-col">
+          <Link 
+            href={`/dashboard/projects/${project.id}`}
+            className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors flex items-center"
+          >
             {project.name}
+            <ArrowUpRight className="ml-1 w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
           </Link>
+          <span className="text-xs text-gray-500 mt-0.5">
+            ID: {project.id.substring(0, 8)}
+          </span>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm text-gray-900">{project.client.name}</div>
+        <div className="text-sm text-gray-900 font-medium">{project.client.name}</div>
+        {project.client.company && (
+          <div className="text-xs text-gray-500 mt-0.5">{project.client.company}</div>
+        )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <StatusBadge status={project.status} />
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-sm text-gray-900">{formatDate(project.deadline)}</div>
+        {deadlineStatus && (
+          <div className={`text-xs font-medium ${deadlineStatus.class} mt-0.5`}>
+            {deadlineStatus.label}
+          </div>
+        )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         {showProgressEdit ? (
-          <div className="flex items-center space-x-2">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              value={progressValue}
-              onChange={(e) => setProgressValue(Number(e.target.value))}
-              className="w-24"
-            />
-            <span className="text-xs font-medium">{progressValue}%</span>
-            <button
-              onClick={handleProgressChange}
-              disabled={isUpdating}
-              className="ml-2 text-green-600 hover:text-green-800"
-            >
-              {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-            </button>
-            <button
-              onClick={() => {
-                setShowProgressEdit(false);
-                setProgressValue(project.completionPercentage);
-              }}
-              className="text-red-600 hover:text-red-800"
-            >
-              <XCircle className="h-4 w-4" />
-            </button>
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center space-x-2">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={progressValue}
+                onChange={(e) => setProgressValue(Number(e.target.value))}
+                className="w-24 accent-blue-600"
+              />
+              <span className="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">{progressValue}%</span>
+            </div>
+            <div className="flex space-x-1">
+              <button
+                onClick={handleProgressChange}
+                disabled={isUpdating}
+                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-green-500"
+              >
+                {isUpdating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCircle className="h-3 w-3 mr-1" />}
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  setShowProgressEdit(false);
+                  setProgressValue(project.completionPercentage);
+                }}
+                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-500"
+              >
+                <XCircle className="h-3 w-3 mr-1" />
+                Cancel
+              </button>
+            </div>
           </div>
         ) : (
           <div 
             className="group cursor-pointer" 
             onClick={() => setShowProgressEdit(true)}
           >
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
               <div 
-                className={`h-2.5 rounded-full ${
+                className={`h-2.5 rounded-full transition-all duration-300 ${
                   project.completionPercentage >= 100 ? 'bg-green-600' :
                   project.completionPercentage >= 75 ? 'bg-blue-600' :
-                  project.completionPercentage >= 50 ? 'bg-yellow-400' :
-                  'bg-orange-500'
+                  project.completionPercentage >= 50 ? 'bg-yellow-500' :
+                  project.completionPercentage >= 25 ? 'bg-orange-500' :
+                  'bg-red-500'
                 }`}
                 style={{ width: `${project.completionPercentage}%` }}
               ></div>
             </div>
-            <div className="flex justify-between">
-              <div className="text-xs text-gray-500 mt-1">{project.completionPercentage}% complete</div>
-              <div className="text-xs text-blue-500 opacity-0 group-hover:opacity-100 mt-1">Edit</div>
+            <div className="flex justify-between mt-1">
+              <div className="text-xs text-gray-600 font-medium">{project.completionPercentage}%</div>
+              <div className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">Edit</div>
             </div>
           </div>
         )}
@@ -480,17 +748,25 @@ function ProjectRow({ project, onProjectUpdate }) {
             {project.teamMembers.slice(0, 3).map((member, index) => (
               <div
                 key={member.id || index}
-                className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-blue-100 flex items-center justify-center"
+                className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center"
                 title={member.name}
               >
-                <span className="text-xs font-medium text-blue-800">
-                  {member.name.split(' ').map(n => n[0]).join('')}
-                </span>
+                {member.avatar ? (
+                  <img 
+                    src={member.avatar} 
+                    alt={member.name} 
+                    className="h-8 w-8 rounded-full object-cover" 
+                  />
+                ) : (
+                  <span className="text-xs font-semibold text-blue-800">
+                    {member.name.split(' ').map(n => n[0]).join('')}
+                  </span>
+                )}
               </div>
             ))}
             {project.teamMembers.length > 3 && (
               <div 
-                className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-300 flex items-center justify-center"
+                className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-200 flex items-center justify-center"
                 title={project.teamMembers.slice(3).map(m => m.name).join(', ')}
               >
                 <span className="text-xs font-medium text-gray-600">
@@ -500,50 +776,58 @@ function ProjectRow({ project, onProjectUpdate }) {
             )}
           </div>
         ) : (
-          <span className="text-xs text-gray-500">No team assigned</span>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            No team assigned
+          </span>
         )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm text-gray-900">{formatCurrency(project.budget)}</div>
+        <div className="text-sm font-medium text-gray-900">{formatCurrency(project.budget)}</div>
+        {project.estimatedHours && (
+          <div className="text-xs text-gray-500 mt-0.5">{project.estimatedHours} hours</div>
+        )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-        <div className="relative" ref={menuRef}>
-          <button 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="text-gray-400 hover:text-gray-500"
+        <div className="flex items-center space-x-1">
+          <Link 
+            href={`/dashboard/projects/${project.id}`}
+            className="inline-flex items-center justify-center p-1.5 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+            title="View Details"
           >
-            <MoreHorizontal className="w-5 h-5" />
+            <Eye className="w-4 h-4" />
+          </Link>
+          
+          <Link 
+            href={`/dashboard/projects/${project.id}/edit`}
+            className="inline-flex items-center justify-center p-1.5 rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500"
+            title="Edit Project"
+          >
+            <Edit className="w-4 h-4" />
+          </Link>
+          
+          <button
+            onClick={() => setShowProgressEdit(true)}
+            className="inline-flex items-center justify-center p-1.5 rounded-md bg-green-50 text-green-600 hover:bg-green-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-green-500"
+            title="Update Progress"
+          >
+            <BarChart3 className="w-4 h-4" />
           </button>
           
-          {isMenuOpen && (
-            <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-              <div className="py-1">
-                <Link 
-                  href={`/dashboard/projects/${project.id}`}
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  View Details
-                </Link>
-                <Link 
-                  href={`/dashboard/projects/${project.id}`}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Edit Project
-                </Link>
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setShowProgressEdit(true);
-                    setIsMenuOpen(false);
-                  }}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Update Progress
-                </button>
-              </div>
-            </div>
-          )}
+          <Link 
+            href={`/dashboard/projects/${project.id}/tasks`}
+            className="inline-flex items-center justify-center p-1.5 rounded-md bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-amber-500"
+            title="Manage Tasks"
+          >
+            <CheckSquare className="w-4 h-4" />
+          </Link>
+          
+          <Link 
+            href={`/dashboard/projects/${project.id}/team`}
+            className="inline-flex items-center justify-center p-1.5 rounded-md bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-purple-500"
+            title="Manage Team"
+          >
+            <Users className="w-4 h-4" />
+          </Link>
         </div>
       </td>
     </tr>

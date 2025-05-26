@@ -1,4 +1,12 @@
 import mongoose from 'mongoose';
+import { addCacheInvalidationHooks } from './model-hooks';
+import User from '@/models/User';
+import Project from '@/models/Project';
+import Task from '@/models/Task';
+import Client from '@/models/Client';
+import TimeEntry from '@/models/TimeEntry';
+import Invoice from '@/models/Invoice';
+import Expense from '@/models/Expense';
 
 const MONGODB_URI = process.env.MONGODB_URI 
 
@@ -6,7 +14,7 @@ const MONGODB_URI = process.env.MONGODB_URI
 let cached = global.mongoose;
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = global.mongoose = { conn: null, promise: null, hooksApplied: false };
 }
 
 async function connectToDatabase() {
@@ -48,6 +56,12 @@ async function connectToDatabase() {
 
     try {
       cached.conn = await cached.promise;
+      
+      // Apply cache invalidation hooks to models if not already applied
+      if (!cached.hooksApplied) {
+        applyModelHooks();
+        cached.hooksApplied = true;
+      }
     } catch (error) {
       cached.promise = null; // Reset promise on error
       throw error; // Re-throw for the caller to handle
@@ -59,7 +73,30 @@ async function connectToDatabase() {
     // Reset the connection state
     cached.conn = null;
     cached.promise = null;
+    cached.hooksApplied = false;
     throw error;
+  }
+}
+
+/**
+ * Apply cache invalidation hooks to all models
+ */
+function applyModelHooks() {
+  try {
+    console.log('Applying cache invalidation hooks to models...');
+    
+    // Apply hooks to each model
+    addCacheInvalidationHooks(User, 'user');
+    addCacheInvalidationHooks(Project, 'project');
+    addCacheInvalidationHooks(Task, 'task');
+    addCacheInvalidationHooks(Client, 'client');
+    addCacheInvalidationHooks(TimeEntry, 'timeentry');
+    addCacheInvalidationHooks(Invoice, 'invoice');
+    addCacheInvalidationHooks(Expense, 'expense');
+    
+    console.log('Cache invalidation hooks applied successfully');
+  } catch (error) {
+    console.error('Error applying cache invalidation hooks:', error);
   }
 }
 

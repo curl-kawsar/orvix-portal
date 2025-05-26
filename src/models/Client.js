@@ -105,6 +105,29 @@ const clientSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Add indexes for common query patterns
+clientSchema.index({ name: 1 });
+clientSchema.index({ email: 1 });
+clientSchema.index({ status: 1 });
+clientSchema.index({ company: 1 });
+clientSchema.index({ 'address.country': 1 });
+clientSchema.index({ 'address.city': 1 });
+clientSchema.index({ industry: 1 });
+clientSchema.index({ createdBy: 1 });
+clientSchema.index({ 'communicationLogs.date': 1 });
+clientSchema.index({ 'communicationLogs.type': 1 });
+clientSchema.index({ 'communicationLogs.recordedBy': 1 });
+clientSchema.index({ 'contactPersons.email': 1 });
+clientSchema.index({ 'contactPersons.isPrimary': 1 });
+clientSchema.index({ tags: 1 });
+clientSchema.index({ createdAt: 1 });
+clientSchema.index({ updatedAt: 1 });
+
+// Compound indexes for common queries
+clientSchema.index({ status: 1, industry: 1 });
+clientSchema.index({ status: 1, 'address.country': 1 });
+clientSchema.index({ status: 1, createdAt: 1 });
+
 // Create the model if it doesn't exist
 const Client = mongoose.models.Client || mongoose.model('Client', clientSchema);
 

@@ -60,6 +60,7 @@ FileSchema.index({
   tags: 'text' 
 });
 
+
 // Create the model if it doesn't exist already
 const File = mongoose.models.File || mongoose.model('File', FileSchema);
 

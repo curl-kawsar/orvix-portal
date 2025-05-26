@@ -107,6 +107,17 @@ UserSchema.methods.comparePassword = async function(candidatePassword) {
   }
 };
 
+// Add indexes for common query patterns
+UserSchema.index({ email: 1 }); // For login and email lookup
+UserSchema.index({ role: 1 }); // For role-based queries
+UserSchema.index({ department: 1 }); // For department-based queries
+UserSchema.index({ status: 1 }); // For filtering by status
+UserSchema.index({ 'skills.name': 1 }); // For skill-based searches
+UserSchema.index({ createdAt: 1 }); // For sorting by creation date
+UserSchema.index({ lastLogin: 1 }); // For sorting by last login
+UserSchema.index({ role: 1, department: 1 }); // For combined role/department queries
+UserSchema.index({ status: 1, department: 1 }); // For filtering active users by department
+
 // Create the model if it doesn't exist
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 

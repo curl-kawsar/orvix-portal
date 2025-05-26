@@ -56,6 +56,23 @@ TimeEntrySchema.index({ taskId: 1 });
 TimeEntrySchema.index({ startTime: 1 });
 TimeEntrySchema.index({ status: 1 });
 
+// Additional indexes for common query patterns
+TimeEntrySchema.index({ endTime: 1 });
+TimeEntrySchema.index({ billable: 1 });
+TimeEntrySchema.index({ 'tags': 1 });
+TimeEntrySchema.index({ createdAt: 1 });
+TimeEntrySchema.index({ updatedAt: 1 });
+
+// Compound indexes for common query combinations
+TimeEntrySchema.index({ creator: 1, startTime: 1 });
+TimeEntrySchema.index({ projectId: 1, creator: 1 });
+TimeEntrySchema.index({ taskId: 1, creator: 1 });
+TimeEntrySchema.index({ startTime: 1, endTime: 1 });
+TimeEntrySchema.index({ creator: 1, status: 1 });
+TimeEntrySchema.index({ creator: 1, billable: 1 });
+TimeEntrySchema.index({ projectId: 1, billable: 1 });
+TimeEntrySchema.index({ projectId: 1, startTime: 1, endTime: 1 });
+
 // Calculate duration when saving if start and end time are provided
 TimeEntrySchema.pre('save', function(next) {
   if (this.startTime && this.endTime && this.status === 'completed') {

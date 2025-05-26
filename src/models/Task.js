@@ -98,6 +98,23 @@ export const TaskSchema = new mongoose.Schema({
 TaskSchema.index({ status: 1, project: 1 });
 TaskSchema.index({ assignee: 1 });
 
+// Additional indexes for improved performance
+TaskSchema.index({ createdBy: 1 });
+TaskSchema.index({ priority: 1 });
+TaskSchema.index({ dueDate: 1 });
+TaskSchema.index({ isArchived: 1 });
+TaskSchema.index({ labels: 1 });
+TaskSchema.index({ order: 1 });
+TaskSchema.index({ createdAt: 1 });
+TaskSchema.index({ updatedAt: 1 });
+TaskSchema.index({ 'timeEntries.user': 1 });
+TaskSchema.index({ 'comments.createdAt': 1 });
+TaskSchema.index({ 'comments.user': 1 });
+// Compound indexes for common query patterns
+TaskSchema.index({ project: 1, status: 1, priority: 1 });
+TaskSchema.index({ assignee: 1, status: 1 });
+TaskSchema.index({ dueDate: 1, status: 1 });
+
 // ✅ Avoid model overwrite issue in hot-reload (Next.js/Dev mode)
 const Task = mongoose.models.Task || mongoose.model('Task', TaskSchema);
 

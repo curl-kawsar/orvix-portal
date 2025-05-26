@@ -110,6 +110,18 @@ const ProjectSchema = new mongoose.Schema({
   timestamps: true,
 });
 
+// Add indexes for common query patterns
+ProjectSchema.index({ status: 1 }); // For queries by status
+ProjectSchema.index({ client: 1 }); // For queries by client
+ProjectSchema.index({ deadline: 1 }); // For deadline-based queries
+ProjectSchema.index({ 'teamMembers.user': 1 }); // For queries by team member
+ProjectSchema.index({ isArchived: 1 }); // For filtering archived projects
+ProjectSchema.index({ completionPercentage: 1 }); // For filtering by completion
+ProjectSchema.index({ createdAt: 1 }); // For sorting by creation date
+ProjectSchema.index({ updatedAt: 1 }); // For sorting by update date
+ProjectSchema.index({ tags: 1 }); // For searching by tags
+ProjectSchema.index({ status: 1, deadline: 1 }); // For combined status and deadline queries
+
 const Project = mongoose.models.Project || mongoose.model('Project', ProjectSchema);
 
 export default Project; 
