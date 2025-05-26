@@ -110,7 +110,7 @@ const ProjectSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Add indexes for common query patterns
+// Add indexes for common query patterns ok
 ProjectSchema.index({ status: 1 }); // For queries by status
 ProjectSchema.index({ client: 1 }); // For queries by client
 ProjectSchema.index({ deadline: 1 }); // For deadline-based queries
