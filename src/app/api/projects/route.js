@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Project from "@/models/Project";
 import { authenticate } from "@/lib/auth";
+import { getCachedData } from "@/lib/cache";
 
 export async function GET(request) {
   try {
@@ -19,6 +20,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const search = searchParams.get('search');
+    const skipCache = searchParams.get('skipCache') === 'true';
     
     // Build query
     let query = {};
@@ -34,14 +36,24 @@ export async function GET(request) {
       ];
     }
     
-    // Fetch projects with their related data
-    const projects = await Project.find(query)
-      .populate('client', 'name')
-      .populate({
-        path: 'teamMembers.user',
-        select: 'name avatar'
-      })
-      .sort({ createdAt: -1 });
+    // Generate a cache key based on the query parameters
+    const cacheKey = `projects-${auth.user.id}-${JSON.stringify(query)}`;
+    
+    // Fetch projects with their related data, using cache unless skipCache is true
+    const getProjects = async () => {
+      return Project.find(query)
+        .populate('client', 'name')
+        .populate({
+          path: 'teamMembers.user',
+          select: 'name avatar'
+        })
+        .sort({ createdAt: -1 });
+    };
+    
+    // Get data with or without cache
+    const projects = skipCache 
+      ? await getProjects()
+      : await getCachedData(cacheKey, getProjects);
     
     // Format projects for response
     const formattedProjects = projects.map(project => {

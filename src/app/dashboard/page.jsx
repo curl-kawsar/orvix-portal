@@ -11,7 +11,8 @@ import {
   Loader2,
   ArrowUpRight,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  RefreshCw
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -132,29 +133,63 @@ export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  async function fetchDashboardData(skipCache = false) {
+    try {
+      skipCache ? setIsRefreshing(true) : setIsLoading(true);
+      
+      // Build URL with potential skipCache parameter
+      const url = skipCache 
+        ? '/api/dashboard?skipCache=true' 
+        : '/api/dashboard';
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch dashboard data');
+      }
+      
+      const data = await response.json();
+      setDashboardData(data);
+      
+      if (skipCache) {
+        toast.success("Dashboard data refreshed successfully");
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setError(error.message);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }
+  
+  // Function to handle the refresh button click
+  const handleRefresh = async () => {
+    try {
+      // Call the cache clear API endpoint
+      const clearResponse = await fetch('/api/cache/clear', {
+        method: 'POST',
+      });
+      
+      if (!clearResponse.ok) {
+        const errorData = await clearResponse.json();
+        throw new Error(errorData.message || 'Failed to clear cache');
+      }
+      
+      // Fetch fresh data
+      await fetchDashboardData(true);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      toast.error('Failed to refresh data');
+      setIsRefreshing(false);
+    }
+  };
   
   useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/dashboard');
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to fetch dashboard data');
-        }
-        
-        const data = await response.json();
-        setDashboardData(data);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        setError(error.message);
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
     fetchDashboardData();
   }, []);
   
@@ -214,11 +249,32 @@ export default function DashboardPage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between"
       >
-        <h1 className="text-3xl font-bold text-gray-900">Welcome to Orvix 360</h1>
-        <p className="mt-2 text-lg text-gray-600">
-          Here's an overview of your projects and performance
-        </p>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome to Orvix 360</h1>
+          <p className="mt-2 text-lg text-gray-600">
+            Here's an overview of your projects and performance
+          </p>
+        </div>
+        
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {isRefreshing ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Refreshing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh Data
+            </>
+          )}
+        </button>
       </motion.div>
       
       {/* Stats Cards */}

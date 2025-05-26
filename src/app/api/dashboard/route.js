@@ -21,53 +21,65 @@ export async function GET(request) {
 
     await connectToDatabase();
     
+    // Check if we should skip the cache
+    const { searchParams } = new URL(request.url);
+    const skipCache = searchParams.get('skipCache') === 'true';
+    
     // Cache key includes user ID to make cache user-specific
     const userId = auth.user.id;
     const cacheKeyPrefix = `dashboard-${userId}`;
     
+    // Helper function that conditionally uses cache
+    const getData = async (cacheKey, dataFn, ttl) => {
+      if (skipCache) {
+        return await dataFn();
+      }
+      return await getCachedData(cacheKey, dataFn, ttl);
+    };
+    
     // Get project statistics with caching
-    const projectsCount = await getCachedData(
+    const projectsCount = await getData(
       `${cacheKeyPrefix}-projects-count`,
       () => Project.countDocuments()
     );
     
-    const activeProjects = await getCachedData(
+    const activeProjects = await getData(
       `${cacheKeyPrefix}-active-projects`,
       () => Project.countDocuments({ status: 'in-progress' })
     );
     
-    const completedProjects = await getCachedData(
+    const completedProjects = await getData(
       `${cacheKeyPrefix}-completed-projects`,
       () => Project.countDocuments({ status: 'completed' })
     );
     
-    const onHoldProjects = await getCachedData(
+    const onHoldProjects = await getData(
       `${cacheKeyPrefix}-onhold-projects`,
       () => Project.countDocuments({ status: 'on-hold' })
     );
     
     // Get task statistics with caching
-    const tasksCount = await getCachedData(
+    const tasksCount = await getData(
       `${cacheKeyPrefix}-tasks-count`,
       () => Task.countDocuments()
     );
     
-    const todoTasks = await getCachedData(
+    const todoTasks = await getData(
       `${cacheKeyPrefix}-todo-tasks`,
       () => Task.countDocuments({ status: 'todo' })
     );
     
-    const inProgressTasks = await getCachedData(
+    const inProgressTasks = await getData(
       `${cacheKeyPrefix}-inprogress-tasks`,
       () => Task.countDocuments({ status: 'in-progress' })
     );
     
-    const reviewTasks = await getCachedData(
+    const reviewTasks = await getData(
       `${cacheKeyPrefix}-review-tasks`,
       () => Task.countDocuments({ status: 'review' })
     );
     
-    const doneTasks = await getCachedData(
+    const doneTasks = await getData(
       `${cacheKeyPrefix}-done-tasks`,
       () => Task.countDocuments({ status: 'done' })
     );
@@ -79,7 +91,7 @@ export async function GET(request) {
     const lastDayOfLastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
     
     // Cache invoice data
-    const paidInvoicesThisMonth = await getCachedData(
+    const paidInvoicesThisMonth = await getData(
       `${cacheKeyPrefix}-invoices-thismonth`,
       () => Invoice.find({
         status: 'paid',
@@ -87,7 +99,7 @@ export async function GET(request) {
       })
     );
     
-    const paidInvoicesLastMonth = await getCachedData(
+    const paidInvoicesLastMonth = await getData(
       `${cacheKeyPrefix}-invoices-lastmonth`,
       () => Invoice.find({
         status: 'paid',
@@ -95,7 +107,7 @@ export async function GET(request) {
       })
     );
     
-    const outstandingInvoices = await getCachedData(
+    const outstandingInvoices = await getData(
       `${cacheKeyPrefix}-invoices-outstanding`,
       () => Invoice.find({
         status: { $in: ['sent', 'overdue'] }
@@ -107,13 +119,13 @@ export async function GET(request) {
     const outstanding = outstandingInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
     
     // Get team data with caching
-    const usersCount = await getCachedData(
+    const usersCount = await getData(
       `${cacheKeyPrefix}-users-count`,
       () => User.countDocuments({ isActive: true })
     );
     
     // Get upcoming deadlines with caching
-    const upcomingDeadlines = await getCachedData(
+    const upcomingDeadlines = await getData(
       `${cacheKeyPrefix}-deadlines`,
       () => Project.find({
         deadline: { $gte: new Date(), $lte: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) },
@@ -126,7 +138,7 @@ export async function GET(request) {
     );
     
     // Get recent activities with caching (shorter TTL for more up-to-date activity)
-    const recentActivities = await getCachedData(
+    const recentActivities = await getData(
       `${cacheKeyPrefix}-activities`,
       () => Task.find()
         .populate('assignee', 'name')
