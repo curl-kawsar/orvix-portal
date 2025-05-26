@@ -23,7 +23,17 @@ const nextConfig = {
       }
     ];
   },
-  // Trust AWS's forwarded headers
+  // AWS specific configurations
+  serverRuntimeConfig: {
+    // Will only be available on the server side
+    mySecret: process.env.JWT_SECRET,
+  },
+  publicRuntimeConfig: {
+    // Will be available on both server and client
+    staticFolder: '/static',
+    apiUrl: process.env.API_URL || '',
+  },
+  // Additional AWS settings
   experimental: {
     forwardProxy: true,
   }

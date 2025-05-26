@@ -22,6 +22,7 @@ export async function middleware(request) {
   // Handle possible AWS proxy or load balancer issues
   const forwardedProto = request.headers.get("x-forwarded-proto");
   const isSecure = forwardedProto === "https" || request.url.startsWith("https://");
+  const host = request.headers.get("host") || "localhost:3000";
   
   const path = request.nextUrl.pathname;
   
@@ -43,7 +44,9 @@ export async function middleware(request) {
       try {
         const payload = await verifyAuthToken(token);
         if (payload) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
+          // Create URL with the correct host
+          const dashboardUrl = new URL("/dashboard", `http://${host}`);
+          return NextResponse.redirect(dashboardUrl);
         }
       } catch (error) {
         // If token verification fails, continue to login page
@@ -58,9 +61,10 @@ export async function middleware(request) {
   
   // No token, redirect to login
   if (!token) {
-    const url = new URL("/login", request.url);
-    url.searchParams.set("callbackUrl", encodeURI(request.url));
-    return NextResponse.redirect(url);
+    // Create URL with the correct host
+    const loginUrl = new URL("/login", `http://${host}`);
+    loginUrl.searchParams.set("callbackUrl", `http://${host}${request.nextUrl.pathname}`);
+    return NextResponse.redirect(loginUrl);
   }
   
   try {
@@ -68,7 +72,8 @@ export async function middleware(request) {
     const payload = await verifyAuthToken(token);
     if (!payload) {
       // If token is invalid, clear it and redirect to login
-      const response = NextResponse.redirect(new URL("/login", request.url));
+      const loginUrl = new URL("/login", `http://${host}`);
+      const response = NextResponse.redirect(loginUrl);
       response.cookies.delete("token");
       return response;
     }
@@ -78,7 +83,8 @@ export async function middleware(request) {
   } catch (error) {
     console.error("Middleware auth error:", error);
     // If verification throws an error, redirect to login
-    const response = NextResponse.redirect(new URL("/login", request.url));
+    const loginUrl = new URL("/login", `http://${host}`);
+    const response = NextResponse.redirect(loginUrl);
     response.cookies.delete("token");
     return response;
   }
