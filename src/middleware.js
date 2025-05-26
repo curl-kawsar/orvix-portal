@@ -19,6 +19,10 @@ async function verifyAuthToken(token) {
 }
 
 export async function middleware(request) {
+  // Handle possible AWS proxy or load balancer issues
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const isSecure = forwardedProto === "https" || request.url.startsWith("https://");
+  
   const path = request.nextUrl.pathname;
   
   // Define public paths that don't require authentication

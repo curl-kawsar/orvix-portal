@@ -56,10 +56,10 @@ export async function POST(request) {
     const cookieStore = cookies();
     cookieStore.set("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true, // Always use secure in production
       maxAge: 60 * 60 * 24, // 1 day
       path: "/",
-      sameSite: "lax" // More permissive for cross-site requests
+      sameSite: "none" // Allow cross-site requests for AWS load balancers
     });
 
     console.log(`Login successful for: ${email} with ID: ${userId}`);
