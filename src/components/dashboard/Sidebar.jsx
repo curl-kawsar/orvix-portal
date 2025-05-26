@@ -12,7 +12,8 @@ import {
   Settings,
   FileText,
   CreditCard,
-  LogOut
+  LogOut,
+  FolderOpen
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +26,7 @@ const navigationItems = {
     { name: "Tasks", path: "/dashboard/tasks", icon: <ClipboardList size={20} /> },
     { name: "Team", path: "/dashboard/team", icon: <Users size={20} /> },
     { name: "Clients", path: "/dashboard/clients", icon: <UserCircle size={20} /> },
+    { name: "Files", path: "/dashboard/files", icon: <FolderOpen size={20} /> },
     { name: "Calendar", path: "/dashboard/calendar", icon: <Calendar size={20} /> },
     { name: "Time Tracking", path: "/dashboard/time-tracking", icon: <Clock size={20} /> },
     { name: "Finance", path: "/dashboard/finance", icon: <CreditCard size={20} /> },
@@ -35,6 +37,7 @@ const navigationItems = {
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={20} /> },
     { name: "Projects", path: "/dashboard/projects", icon: <Briefcase size={20} /> },
     { name: "Tasks", path: "/dashboard/tasks", icon: <ClipboardList size={20} /> },
+    { name: "Files", path: "/dashboard/files", icon: <FolderOpen size={20} /> },
     { name: "Time Tracking", path: "/dashboard/time-tracking", icon: <Clock size={20} /> },
     { name: "Calendar", path: "/dashboard/calendar", icon: <Calendar size={20} /> },
     { name: "Settings", path: "/dashboard/settings", icon: <Settings size={20} /> }
@@ -43,6 +46,7 @@ const navigationItems = {
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={20} /> },
     { name: "Projects", path: "/dashboard/projects", icon: <Briefcase size={20} /> },
     { name: "Tasks", path: "/dashboard/tasks", icon: <ClipboardList size={20} /> },
+    { name: "Files", path: "/dashboard/files", icon: <FolderOpen size={20} /> },
     { name: "Time Tracking", path: "/dashboard/time-tracking", icon: <Clock size={20} /> },
     { name: "Calendar", path: "/dashboard/calendar", icon: <Calendar size={20} /> },
     { name: "Settings", path: "/dashboard/settings", icon: <Settings size={20} /> }
@@ -52,6 +56,7 @@ const navigationItems = {
     { name: "Projects", path: "/dashboard/projects", icon: <Briefcase size={20} /> },
     { name: "Tasks", path: "/dashboard/tasks", icon: <ClipboardList size={20} /> },
     { name: "Clients", path: "/dashboard/clients", icon: <UserCircle size={20} /> },
+    { name: "Files", path: "/dashboard/files", icon: <FolderOpen size={20} /> },
     { name: "Time Tracking", path: "/dashboard/time-tracking", icon: <Clock size={20} /> },
     { name: "Calendar", path: "/dashboard/calendar", icon: <Calendar size={20} /> },
     { name: "Settings", path: "/dashboard/settings", icon: <Settings size={20} /> }
@@ -59,6 +64,7 @@ const navigationItems = {
   hr: [
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={20} /> },
     { name: "Team", path: "/dashboard/team", icon: <Users size={20} /> },
+    { name: "Files", path: "/dashboard/files", icon: <FolderOpen size={20} /> },
     { name: "Calendar", path: "/dashboard/calendar", icon: <Calendar size={20} /> },
     { name: "Reports", path: "/dashboard/reports", icon: <FileText size={20} /> },
     { name: "Settings", path: "/dashboard/settings", icon: <Settings size={20} /> }
@@ -67,6 +73,7 @@ const navigationItems = {
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={20} /> },
     { name: "Projects", path: "/dashboard/projects", icon: <Briefcase size={20} /> },
     { name: "Clients", path: "/dashboard/clients", icon: <UserCircle size={20} /> },
+    { name: "Files", path: "/dashboard/files", icon: <FolderOpen size={20} /> },
     { name: "Finance", path: "/dashboard/finance", icon: <CreditCard size={20} /> },
     { name: "Reports", path: "/dashboard/reports", icon: <FileText size={20} /> },
     { name: "Settings", path: "/dashboard/settings", icon: <Settings size={20} /> }
@@ -74,6 +81,7 @@ const navigationItems = {
   intern: [
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={20} /> },
     { name: "Tasks", path: "/dashboard/tasks", icon: <ClipboardList size={20} /> },
+    { name: "Files", path: "/dashboard/files", icon: <FolderOpen size={20} /> },
     { name: "Time Tracking", path: "/dashboard/time-tracking", icon: <Clock size={20} /> },
     { name: "Calendar", path: "/dashboard/calendar", icon: <Calendar size={20} /> },
     { name: "Settings", path: "/dashboard/settings", icon: <Settings size={20} /> }
