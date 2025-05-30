@@ -14,8 +14,6 @@
 /build
 
 # Environment Variables
-.env
-.env.local
 .env.development.local
 .env.test.local
 .env.production.local
@@ -37,11 +35,9 @@ yarn-error.log*
 
 # IDE / Code editors
 /.idea
-/.vscode
 *.swp
 *.swo
 .DS_Store
-.env.local
 .env.development.local
 .env.test.local
 .env.production.local
@@ -68,3 +64,4 @@ public/worker-*.js.map
 
 # Project specific 
 # (You can add your custom entries below) 
+config.bat

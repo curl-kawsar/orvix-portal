@@ -234,7 +234,7 @@ export default function LoginPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-white/80">Project Lead</p>
-                    <h3 className="text-white font-bold">Sarah Chen</h3>
+                    <h3 className="text-white font-bold">Md. Kawsar Ahmed</h3>
                   </div>
                 </div>
                 <p className="text-white/80 italic">
